@@ -1,0 +1,46 @@
+{
+  "name": "legaldoc-worker",
+  "version": "1.0.0",
+  "main": "dist/cmd/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node -r module-alias/register dist/cmd/index.js",
+    "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/cmd/index.ts",
+    "lint": "eslint . --ext .ts",
+    "test": "jest"
+  },
+  "_moduleAliases": {
+    "@": "dist"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "pg": "^8.14.1",
+    "pino": "^9.6.0",
+    "pino-http": "^10.4.0",
+    "pino-pretty": "^13.0.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.14",
+    "@types/pg": "^8.11.11",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
+    "eslint": "^9.23.0",
+    "jest": "^29.7.0",
+    "module-alias": "^2.2.3",
+    "ts-jest": "^29.3.0",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.2"
+  }
+}
