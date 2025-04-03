@@ -36,7 +36,7 @@ export class OrganizationManager {
 
   async getByID(id: string, timeoutMs: number): Promise<Organization | null> {
     try {
-      return this.pgstore.org.getByID(id, timeoutMs);
+      return await this.pgstore.org.getByID(id, timeoutMs);
     } catch (error) {
       return handleError(error, "Error retrieving organization by id");
     }
@@ -47,7 +47,7 @@ export class OrganizationManager {
     timeoutMs: number
   ): Promise<Organization> {
     try {
-      return this.usecase.org.create(input, timeoutMs);
+      return await this.usecase.org.create(input, timeoutMs);
     } catch (error) {
       return handleError(error, "Error creating organization");
     }
@@ -58,7 +58,7 @@ export class OrganizationManager {
     timeoutMs: number
   ): Promise<Organization | null> {
     try {
-      return this.usecase.org.update(input, timeoutMs);
+      return await this.usecase.org.update(input, timeoutMs);
     } catch (error) {
       return handleError(error, "Error updating organization");
     }

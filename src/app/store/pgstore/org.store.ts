@@ -6,7 +6,7 @@ import {
   OrganizationListResult,
 } from "@/app/models/org.models";
 import { logger } from "@/utils/logger";
-import { ErrorFactory } from "@/utils/errors/faulterr";
+import { ErrorType, handlePostgresError } from "@/utils/errors/faulterr";
 import { getDbClient, getGlobalTotal, resolveFilterSort } from "./db-utils";
 import { SearchFilter } from "@/app/models/filters";
 
@@ -38,7 +38,7 @@ export class OrganizationStore {
       const qSelect = `SELECT *`;
       const qFrom = `FROM organizations`;
       const qWhere = `
-        WHER ($1::BOOLEAN IS NULL OR $1 = is_archived)
+        WHERE ($1::BOOLEAN IS NULL OR $1 = is_archived)
         AND   ($2::TEXT IS NULL OR name ILIKE '%' || $2 || '%')
       `;
 
@@ -60,13 +60,7 @@ export class OrganizationStore {
 
       return { total, list };
     } catch (error) {
-      logger.error("Error getting organizations:", error);
-      if (error instanceof Error) {
-        throw ErrorFactory.postgres(error.message);
-      }
-      throw ErrorFactory.internalServer(
-        "Unknown error occurred when getting organizations"
-      );
+      throw handlePostgresError(error, errMsg);
     } finally {
       if (release) {
         client.release();
@@ -78,27 +72,25 @@ export class OrganizationStore {
   async getByID(id: string, timeoutMs: number): Promise<Organization | null> {
     const { client, release } = await getDbClient(this.pool, timeoutMs);
 
-    const errMsg = "error when trying to get organization by id";
+    const errMsg = `Error when trying to get organization by id: ${id}`;
     try {
       // construct query
       const queryStmt = `
         SELECT * FROM organizations
-        WHERE organizations.id = $1
+        WHERE id = $1
         `;
 
       // query and scan rows
       const result = await client.query(queryStmt, [id]);
+
+      // throw error is row count is zero
       if (result.rowCount === 0) {
-        throw new Error(`not found: ${errMsg}`);
+        throw new Error(`${ErrorType.NOT_FOUND}${errMsg}`);
       }
+
       return this.mapToOrganization(result.rows[0]);
     } catch (error) {
-      if (error instanceof Error) {
-        throw ErrorFactory.postgres(error.message);
-      }
-      throw ErrorFactory.internalServer(
-        "Unknown error occurred when getting organization by id"
-      );
+      throw handlePostgresError(error, errMsg);
     } finally {
       if (release) {
         client.release();
