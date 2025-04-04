@@ -1,8 +1,6 @@
 import {
   Organization,
-  CreateOrganizationInput,
-  UpdateOrganizationInput,
-  OrganizationFilter,
+  OrganizationInput,
   OrganizationListResult,
 } from "@/app/models/org.models";
 import { PgStore } from "@/app/store/pgstore";
@@ -24,41 +22,54 @@ export class OrganizationManager {
   }
 
   async list(
-    filter: SearchFilter,
-    timeoutMs: number
+    timeoutMs: number,
+    filter: SearchFilter
   ): Promise<OrganizationListResult> {
     try {
-      return await this.pgstore.org.list(filter, timeoutMs);
+      return await this.pgstore.org.list(timeoutMs, filter);
     } catch (error) {
       return handleError(error, "Error retrieving organization list");
     }
   }
 
-  async getByID(id: string, timeoutMs: number): Promise<Organization | null> {
+  async getByID(timeoutMs: number, id: string): Promise<Organization | null> {
     try {
-      return await this.pgstore.org.getByID(id, timeoutMs);
+      return await this.pgstore.org.getByID(timeoutMs, id);
     } catch (error) {
       return handleError(error, "Error retrieving organization by id");
     }
   }
 
   async create(
-    input: CreateOrganizationInput,
-    timeoutMs: number
+    timeoutMs: number,
+    input: OrganizationInput
   ): Promise<Organization> {
     try {
-      return await this.usecase.org.create(input, timeoutMs);
+      // Execute database operations within transaction
+      const org = await this.pgstore.dbtx.withTx(timeoutMs, async (tx) => {
+        return await this.usecase.org.create(tx, timeoutMs, input);
+      });
+
+      // Publish event after successful transaction
+      // await this.eventService.publishOrganizationUpdated(org);
+
+      return org;
     } catch (error) {
       return handleError(error, "Error creating organization");
     }
   }
 
   async update(
-    input: UpdateOrganizationInput,
-    timeoutMs: number
+    timeoutMs: number,
+    id: string,
+    input: OrganizationInput
   ): Promise<Organization | null> {
     try {
-      return await this.usecase.org.update(input, timeoutMs);
+      const org = await this.pgstore.dbtx.withTx(timeoutMs, async (tx) => {
+        return await this.usecase.org.update(tx, timeoutMs, id, input);
+      });
+
+      return org;
     } catch (error) {
       return handleError(error, "Error updating organization");
     }
